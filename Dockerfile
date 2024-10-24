@@ -6,6 +6,15 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 # Install dependencies
 # Install necessary packages for Chromium sandbox
 RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon0 libxcomposite1 libxrandr2 \
+    libxdamage1 libgbm1 libasound2 libnss3 libxss1 libegl1-mesa libpangocairo-1.0-0 \
+    fonts-liberation libappindicator3-1 libxshmfence1 wget gnupg && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/* /var/tmp/*
+
+RUN apt-get update && apt-get install -y \
     wget \
     curl \
     gnupg \
@@ -25,14 +34,7 @@ RUN apt-get update && apt-get install -y \
     xdg-utils \
     --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    supervisor \
-    libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon0 libxcomposite1 libxrandr2 \
-    libxdamage1 libgbm1 libasound2 libnss3 libxss1 libegl1-mesa libpangocairo-1.0-0 \
-    fonts-liberation libappindicator3-1 libxshmfence1 wget gnupg && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 # Add your app scripts
 COPY ./ppptr.js /usr/src/app/ppptr.js

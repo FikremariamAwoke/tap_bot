@@ -3,6 +3,8 @@ import time
 import subprocess
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import signal
+import sys
 
 # Path to the Node.js script
 node_script = "ppptr.js"
@@ -15,13 +17,12 @@ class NodeRestartHandler(FileSystemEventHandler):
             self.restart_node_process()
 
     def restart_node_process(self):
-        global node_process
+        global node_process  # Declare global variable at the top
         if node_process:
             node_process.terminate()  # Terminate the existing process
             node_process.wait()  # Wait for it to terminate
         # Start a new Node.js process
-        global node_process
-        node_process = subprocess.Popen(['node', node_script])
+        node_process = subprocess.Popen(['node', node_script])  # Start new process
 
 # Initialize the Node.js process
 node_process = subprocess.Popen(['node', node_script])
@@ -31,12 +32,22 @@ event_handler = NodeRestartHandler()
 observer = Observer()
 observer.schedule(event_handler, path='.', recursive=False)
 
+# Function to handle graceful exit
+def signal_handler(sig, frame):
+    print("Exiting...")
+    observer.stop()
+    node_process.terminate()
+    node_process.wait()
+    observer.join()
+    sys.exit(0)
+
+# Setup signal handling for graceful exit
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 # Start observing
 observer.start()
 print("Watching for changes in ppptr.js...")
-
-# Get the current directory
-git_folder = os.getcwd()
 
 while True:
     try:
@@ -61,7 +72,7 @@ while True:
         print(f"Error occurred: {e}")
     
     # Wait for 5 seconds
-    time.sleep(5)
+    time.sleep(10)
 
 # Clean up on exit
 observer.stop()

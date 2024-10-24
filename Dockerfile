@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN apt-get update && apt-get install -y \
     git \
+    ssh \
     wget \
     curl \
     gnupg \
@@ -42,6 +43,9 @@ COPY ./ppptr.js /usr/src/app/ppptr.js
 COPY ./run.py /usr/src/app/run.py
 COPY ./custom_main.b930ae92.js /usr/src/app/custom_main.b930ae92.js
 COPY ./.git /usr/src/app/.git 
+
+RUN mkdir ~/.ssh
+RUN ssh-keyscan github.com >> ~/.ssh/known_hosts
 
 # Set the working directory
 WORKDIR /usr/src/app

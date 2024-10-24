@@ -60,7 +60,6 @@ const links = [
         // Navigate to the target page
         await page.goto(link, { waitUntil: 'networkidle2' });
     }  catch (error) {
-	await page.goto(link, { waitUntil: 'networkidle2' });
         console.error("Error loading page:", error);
     }
     // Reload the page every 30 minutes (30 * 60 * 1000 milliseconds)

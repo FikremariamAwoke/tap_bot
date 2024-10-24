@@ -34,24 +34,11 @@ RUN apt-get update && apt-get install -y \
     fonts-liberation libappindicator3-1 libxshmfence1 wget gnupg && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get install -y supervisor
-
-# Install Python watchdog
-RUN pip3 install watchdog
-
 # Add your app scripts
 COPY ./ppptr.js /usr/src/app/ppptr.js
-COPY ./auto_update.py /usr/src/app/auto_update.py
+COPY ./run.py /usr/src/app/run.py
 COPY ./custom_main.b930ae92.js /usr/src/app/custom_main.b930ae92.js
 COPY ./.git /usr/src/app/.git 
-
-# Create a supervisor configuration file
-RUN echo "[supervisord]" > /etc/supervisord.conf && \
-    echo "nodaemon=true" >> /etc/supervisord.conf && \
-    echo "[program:python]" >> /etc/supervisord.conf && \
-    echo "command=python3 /usr/src/app/auto_update.py" >> /etc/supervisord.conf && \
-    echo "[program:node]" >> /etc/supervisord.conf && \
-    echo "command=node /usr/src/app/ppptr.js" >> /etc/supervisord.conf
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -64,5 +51,5 @@ USER puppeteer
 
 RUN npx puppeteer browsers install chrome
 
-# Start supervisord
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# Set the entry point to run the Python script
+ENTRYPOINT ["python3", "run.py"]

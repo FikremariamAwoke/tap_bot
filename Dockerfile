@@ -34,6 +34,8 @@ RUN apt-get update && apt-get install -y \
     fonts-liberation libappindicator3-1 libxshmfence1 wget gnupg && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get install -y supervisor
+
 # Install Python watchdog
 RUN pip3 install watchdog
 
@@ -63,4 +65,4 @@ USER puppeteer
 RUN npx puppeteer browsers install chrome
 
 # Start supervisord
-# CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

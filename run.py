@@ -1,5 +1,4 @@
-import subprocess
-import time
+import asyncio
 import logging
 
 # Configure logging
@@ -8,49 +7,62 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(mes
 # Use the logger
 logger = logging.getLogger(__name__)
 
-def start_node_script():
-    # Start the Node.js script
-    process = subprocess.Popen(['node', 'ppptr.js'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    monitor_node_script(process)
+
+async def start_node_script():
+    # Start the Node.js script asynchronously
+    process = await asyncio.create_subprocess_exec('node', 'ppptr.js', stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, text=True)
     return process
 
-def monitor_node_script(process):
-    # Continuously read output from the Node.js script
+
+async def monitor_node_script(process):
+    # Continuously read output from the Node.js script asynchronously
     try:
         while True:
-            output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
+            output = await process.stdout.readline()
+            if output == '' and process.returncode is not None:
                 break
             if output:
                 logger.info(output.strip())
     except Exception as e:
-       logger.error(f"Error occurred: {e}")
-
-# Start the Node.js script for the first time
-node_process = start_node_script()
-
-while True:
-    try:
-        # Check for new commits
-        fetch_result = subprocess.run(['git', 'fetch'], check=True, capture_output=True, text=True)
-        
-        # Check if the local branch is behind the remote
-        status_result = subprocess.run(['git', 'status'], check=True, capture_output=True, text=True)
-        
-        if "Your branch is behind" in status_result.stdout:
-            logger.info("New commit found. Pulling changes...")
-            subprocess.run(['git', 'pull'], check=True)
-
-            # Terminate the current Node.js process and start a new one
-            logger.info("Restarting Node.js script due to new changes...")
-            node_process.terminate()
-            node_process = start_node_script()
-
-        else:
-            logger.info("No new commits found.")
-
-    except Exception as e:
         logger.error(f"Error occurred: {e}")
-    
-    # Wait for 10 seconds before checking again
-    time.sleep(10)
+
+
+async def main():
+    # Start the Node.js script for the first time
+    node_process = await start_node_script()
+
+    # Run monitor_node_script asynchronously in a separate task
+    asyncio.create_task(monitor_node_script(node_process))
+
+    while True:
+        try:
+            # Check for new commits
+            fetch_result = await asyncio.create_subprocess_exec('git', 'fetch', check=True, capture_output=True, text=True)
+            await fetch_result.wait()
+
+            # Check if the local branch is behind the remote
+            status_result = await asyncio.create_subprocess_exec('git', 'status', check=True, capture_output=True, text=True)
+            await status_result.wait()
+
+            if "Your branch is behind" in status_result.stdout:
+                logger.info("New commit found. Pulling changes...")
+                pull_result = await asyncio.create_subprocess_exec('git', 'pull', check=True, capture_output=True, text=True)
+                await pull_result.wait()
+
+                # Terminate the current Node.js process and start a new one
+                logger.info("Restarting Node.js script due to new changes...")
+                node_process.terminate()
+                node_process = await start_node_script()
+
+            else:
+                logger.info("No new commits found.")
+
+        except Exception as e:
+            logger.error(f"Error occurred: {e}")
+
+        # Wait for 10 seconds before checking again
+        await asyncio.sleep(10)
+
+
+# Run the asynchronous tasks
+asyncio.run(main())

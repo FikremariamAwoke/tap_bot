@@ -16,9 +16,8 @@ def monitor_node_script(process):
                 break
             if output:
                 print(output.strip())
-    except KeyboardInterrupt:
-        print("Terminating the script...")
-        process.terminate()
+    except Exception as e:
+       print(f"Error occurred: {e}")
 
 # Start the Node.js script for the first time
 node_process = start_node_script()
@@ -43,7 +42,7 @@ while True:
         else:
             print("No new commits found.")
 
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         print(f"Error occurred: {e}")
     
     # Wait for 10 seconds before checking again

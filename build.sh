@@ -11,4 +11,4 @@ fi;
 docker build --no-cache -t $IMAGE_NAME .
 
 # Run the Docker container
-docker run -d --name urkocoin-bot-container --cap-add=SYS_ADMIN $IMAGE_NAME
+docker run -d --name urkocoin-bot-container --cap-add=SYS_ADMIN --restart=always $IMAGE_NAME

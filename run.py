@@ -2,6 +2,8 @@ import subprocess
 import threading
 import time
 import logging
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
@@ -27,32 +29,33 @@ def start_process():
 # Initial start of the subprocess
 process, log_thread = start_process()
 
-# Main loop to check for commits and restart the process if needed
-while True:
-    try:
-        # Check for new commits
-        fetch_result = subprocess.run(['git', 'fetch'], check=True, capture_output=True, text=True)
-        
-        # Check if the local branch is behind the remote
-        status_result = subprocess.run(['git', 'status'], check=True, capture_output=True, text=True)
-        
-        if "Your branch is behind" in status_result.stdout:
-            logger.info("New commit found. Pulling changes...\n")
-            subprocess.run(['git', 'pull'], check=True)
+# Create a custom event handler
+class ChangeHandler(FileSystemEventHandler):
+    def on_modified(self, event):
+        if event.src_path.endswith('links.json'):
+            logger.info("links.json file changed. Restarting Node.js script...\n")
 
-            # Terminate the current Node.js process and start a new one
-            logger.info("Restarting Node.js script due to new changes...\n")
-            process.terminate()  # Terminate the process
+            global process, log_thread
+            process.terminate()  # Terminate the current process
             process.wait()  # Wait for it to exit fully
-
-            # Start a new process and logging thread
+            
+            # Start a new process
             process, log_thread = start_process()
 
-        else:
-            logger.info("No new commits found.\n")
+# Set up the watchdog observer
+event_handler = ChangeHandler()
+observer = Observer()
+observer.schedule(event_handler, path='.', recursive=False)  # Monitor the current directory
+observer.start()
 
-    except Exception as e:
-        logger.error(f"[main][git-checker] Error occurred: {e}\n\n")
-        
-    # Wait for 10 seconds before the next check
-    time.sleep(10)
+try:
+    while True:
+        time.sleep(1)  # Keep the main thread alive
+except KeyboardInterrupt:
+    observer.stop()
+except Exception as e:
+    logger.error(f"[main][file-watcher] Error occurred: {e}\n")
+finally:
+    observer.join()
+    if event_handler.process:
+        event_handler.process.terminate()

@@ -43,6 +43,9 @@ COPY ./ppptr.js /usr/src/app/ppptr.js
 COPY ./run.py /usr/src/app/run.py
 COPY ./custom_main.b930ae92.js /usr/src/app/custom_main.b930ae92.js
 COPY ./.git /usr/src/app/.git 
+COPY ./requirements.txt /usr/src/app/requirements.txt
+COPY ./telegram_group_bot.py /usr/src/app/telegram_group_bot.py
+
 
 RUN mkdir ~/.ssh
 RUN ssh-keyscan github.com >> ~/.ssh/known_hosts
@@ -53,10 +56,13 @@ WORKDIR /usr/src/app
 # Install Puppeteer
 RUN npm install puppeteer
 
+# Install Requirements
+RUN pip install -r requirements.txt
+
 RUN useradd -m puppeteer
 USER puppeteer
 
 RUN npx puppeteer browsers install chrome
 
-# Set the entry point to run the Python script
-ENTRYPOINT ["python3", "run.py"]
+# Set the default command to run your scripts
+CMD ["bash", "-c", "python3 run.py && python3 telegram_group_bot.py"]

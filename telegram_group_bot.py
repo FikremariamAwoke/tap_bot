@@ -72,14 +72,21 @@ async def extract_links(update: Update, context: ContextTypes.DEFAULT_TYPE):
             links = re.findall(url_pattern, message)  # Find all links in the message
             if links:
                 for link in links:
-                    logging.info(f"\n\n--------------------------------------------------------------")
-                    logging.info(f"Link found: {get_name_from_link(link)}")  # Print or log the links
+                    logger.info(f"\n\n--------------------------------------------------------------")
+                    logger.info(f"Link found: {get_name_from_link(link)}")  # Print or log the links
                     response = add_link_to_json(link)
-                    logging.info(f"--------------------------------------------------------------\n\n")
+                    logger.info(f"--------------------------------------------------------------\n\n")
                     # Optionally, send the link back to the group or save it
                     await update.message.reply_text(response)
     else:
-        logger.error(f"link {get_name_from_link(link)} is not from group")
+        message = update.message.text
+        if message:
+            links = re.findall(url_pattern, message)
+            if links:
+                for link in links:
+                    logger.info(f"\n\n--------------------------------------------------------------")
+                    logger.error(f"link {get_name_from_link(link)} is not from group")
+                    logger.info(f"--------------------------------------------------------------\n\n")
         await update.message.reply_text("I Don't know you 🤷‍♀️.")
 
 def add_link_to_json(new_url, json_file='links.json') -> str:

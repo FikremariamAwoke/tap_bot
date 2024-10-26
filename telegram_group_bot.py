@@ -32,7 +32,7 @@ async def active(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         # Send names in a single message
         if names:
-            await update.message.reply_text(f"Here are all the names:\n" + "\n".join(names))
+            await update.message.reply_text(f"Here are all the active accounts:\n\n" + "\n".join(names))
         else:
             await update.message.reply_text("No valid names found in links.")
     else:

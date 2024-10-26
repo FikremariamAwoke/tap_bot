@@ -75,7 +75,8 @@ def remove_duplicate(json_file='links.json') -> str:
     with open(json_file, 'r') as file:
         data = json.load(file)
 
-
+    size_of_links = len(data['links'])
+    
     print("--------------------------------------Existing---------------------------------------------")
     for link in data['links']:
         print(f"{get_name_from_link(link['url'])} | {get_user_id_from_link(link['url'])} | {timestamp_to_readable(link['addedAt'])}")
@@ -96,16 +97,18 @@ def remove_duplicate(json_file='links.json') -> str:
     # Convert the latest_links dictionary back to a list
     data['links'] = list(latest_links.values())
 
+    size_of_updated_links = len(data['links'])
+
     print("--------------------------------------Cleaned---------------------------------------------")
     for link in data['links']:
        print(f"{get_name_from_link(link['url'])} | {get_user_id_from_link(link['url'])} | {timestamp_to_readable(link['addedAt'])}")
     print("------------------------------------------------------------------------------------------")
 
-    # Write the updated data back to the JSON file
-    with open(json_file, 'w') as file:
-        json.dump(data, file, indent=4)  # Use indent for pretty printing
-
-    logger.info("Removed duplicates and updated the JSON file.\n\n\n")
+    if size_of_links != size_of_updated_links:
+        # Write the updated data back to the JSON file
+        with open(json_file, 'w') as file:
+            json.dump(data, file, indent=4)  # Use indent for pretty printing
+        logger.info("Removed duplicates and updated the JSON file.\n\n\n")
 
 
 try:

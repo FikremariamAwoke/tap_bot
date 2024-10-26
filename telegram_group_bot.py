@@ -1,4 +1,5 @@
-import time, json
+import time, json 
+from datetime import datetime, timedelta
 from telegram import Update
 import re
 import urllib.parse
@@ -19,24 +20,39 @@ replies = ["👌","👍","😜","😡","🤬","😒","😏","😒","🙂‍↔�
 async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(f'Hello {update.effective_user.first_name}')
 
-# Define the async function to respond with the names
+# Define the async function to respond with the names and time remaining
 async def active(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message.chat.type in [update.message.chat.GROUP, update.message.chat.SUPERGROUP]:
         # Load the JSON file
         with open('links.json', 'r') as file:
             data = json.load(file)
 
-        # Extract names from each link and format them for a single message
-        names = [get_name_from_link(link["url"]) for link in data.get("links", [])]
-        names = [name for name in names if name]  # Filter out None values
+        # Extract names and calculate remaining time
+        result = []
+        for link in data.get("links", []):
+            name = get_name_from_link(link["url"])
+            if name:
+                # Calculate time remaining
+                added_at = datetime.fromisoformat(link["addedAt"])  # Adjust this if your timestamp format differs
+                expiration_time = added_at + timedelta(hours=24)
+                remaining_time = expiration_time - datetime.now()
 
-        # Send names in a single message
-        if names:
-            await update.message.reply_text(f"Here are all the active accounts:\n\n" + "\n".join(names))
+                # Format remaining time in a human-readable way
+                if remaining_time.total_seconds() > 0:
+                    hours, remainder = divmod(remaining_time.total_seconds(), 3600)
+                    minutes = remainder // 60
+                    time_remaining = f"{int(hours)}h {int(minutes)}m remaining"
+                    result.append(f"{name} - {time_remaining}")
+                else:
+                    result.append(f"{name} - expired")
+
+        # Send names with remaining times in a single message
+        if result:
+            await update.message.reply_text(f"Here are all the active accounts:\n\n" + "\n".join(result))
         else:
             await update.message.reply_text("No valid names found in links.")
     else:
-        await update.message.reply_text("I Don't know you 🤷‍♀️.")
+        await update.message.reply_text("I don't know you 🤷‍♀️.")
 
 def get_name_from_link(link):
     # Parse the URL and get the fragment part

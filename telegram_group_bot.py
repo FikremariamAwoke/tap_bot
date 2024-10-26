@@ -114,6 +114,7 @@ def add_link_to_json(new_url, json_file='links.json') -> str:
     else:
         logger.info("Duplicate link found; it will not be added.")
         response = "Link already exists 🙄.";
+        return response
 
     # Write the updated data back to the JSON file
     with open(json_file, 'w') as file:

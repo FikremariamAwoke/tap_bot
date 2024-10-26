@@ -72,7 +72,7 @@ const getNameFromLink = (link) => {
     });
 
     count = count + 1;
-    console.log(`opening the page ${count}: ${getNameFromLink(link)}...\n`);
+    console.log(`opening the page ${count}: ${getNameFromLink(link)}\n`);
     try {
         // Navigate to the target page
         await page.goto(link, { waitUntil: 'networkidle2' });
@@ -82,7 +82,7 @@ const getNameFromLink = (link) => {
 
     // Reload the page every 30 minutes (30 * 60 * 1000 milliseconds)
     setInterval(async () => {
-      console.log(`Reloading the page: ${getNameFromLink(link)}...`);
+      console.log(`Reloading the page: ${getNameFromLink(link)}`);
       try {
         await page.reload({ waitUntil: 'networkidle2' });
         console.log("Page reloaded successfully.\n");

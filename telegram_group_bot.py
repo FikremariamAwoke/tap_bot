@@ -19,6 +19,25 @@ replies = ["👌","👍","😜","😡","🤬","😒","😏","😒","🙂‍↔�
 async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(f'Hello {update.effective_user.first_name}')
 
+# Define the async function to respond with the names
+async def active(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message.chat.type in [update.message.chat.GROUP, update.message.chat.SUPERGROUP]:
+        # Load the JSON file
+        with open('links.json', 'r') as file:
+            data = json.load(file)
+
+        # Extract names from each link and format them for a single message
+        names = [get_name_from_link(link["url"]) for link in data.get("links", [])]
+        names = [name for name in names if name]  # Filter out None values
+
+        # Send names in a single message
+        if names:
+            await update.message.reply_text(f"Here are all the names:\n" + "\n".join(names))
+        else:
+            await update.message.reply_text("No valid names found in links.")
+    else:
+        await update.message.reply_text("I Don't know you 🤷‍♀️.")
+
 def get_name_from_link(link):
     # Parse the URL and get the fragment part
     parsed_url = urllib.parse.urlparse(link)
@@ -53,14 +72,17 @@ async def extract_links(update: Update, context: ContextTypes.DEFAULT_TYPE):
             links = re.findall(url_pattern, message)  # Find all links in the message
             if links:
                 for link in links:
+                    logging.info(f"\n\n--------------------------------------------------------------")
                     logging.info(f"Link found: {get_name_from_link(link)}")  # Print or log the links
-                    add_link_to_json(link)
+                    response = add_link_to_json(link)
+                    logging.info(f"--------------------------------------------------------------\n\n")
                     # Optionally, send the link back to the group or save it
-                    await update.message.reply_text(f"{replies[randrange(len(replies) - 1)]}")
+                    await update.message.reply_text(response)
     else:
         logger.error(f"link {get_name_from_link(link)} is not from group")
+        await update.message.reply_text("I Don't know you 🤷‍♀️.")
 
-def add_link_to_json(new_url, json_file='links.json'):
+def add_link_to_json(new_url, json_file='links.json') -> str:
     # Get the current timestamp
     current_timestamp = int(time.time())
     # Define the threshold for 24 hours in seconds
@@ -70,7 +92,7 @@ def add_link_to_json(new_url, json_file='links.json'):
     required_prefix = "https://tap1.urko.io/#tgWebAppData=query_id%"
     if not new_url.startswith(required_prefix):
         logger.error(f"Link does not start with '{required_prefix}' and will not be added.")
-        return
+        return "❌Invalid Link❌"
 
     # Open and read the existing JSON data
     with open(json_file, 'r') as file:
@@ -79,6 +101,7 @@ def add_link_to_json(new_url, json_file='links.json'):
     # Remove links older than 24 hours
     data['links'] = [link for link in data['links'] if current_timestamp - link['addedAt'] < threshold]
 
+    response = ""
     # Check for duplicates before adding the new link
     if not any(link['url'] == new_url for link in data['links']):
         # Append the new link
@@ -87,17 +110,21 @@ def add_link_to_json(new_url, json_file='links.json'):
             'addedAt': current_timestamp
         })
         logger.info("Link added successfully.")
+        response = f"{replies[randrange(len(replies) - 1)]}"
     else:
         logger.info("Duplicate link found; it will not be added.")
+        response = "Link already exists 🙄.";
 
     # Write the updated data back to the JSON file
     with open(json_file, 'w') as file:
         json.dump(data, file, indent=4)  # Use indent for pretty printing
 
+    return response
 
 app = ApplicationBuilder().token("7215862533:AAEzOQFD0K-zi2gW7Puw5xazq65eBnFzJ5c").build()
 
 app.add_handler(CommandHandler("hello", hello))
+app.add_handler(CommandHandler("hello", active))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, extract_links))
 
 app.run_polling()

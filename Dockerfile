@@ -45,6 +45,7 @@ COPY ./custom_main.b930ae92.js /usr/src/app/custom_main.b930ae92.js
 COPY ./.git /usr/src/app/.git 
 COPY ./requirements.txt /usr/src/app/requirements.txt
 COPY ./telegram_group_bot.py /usr/src/app/telegram_group_bot.py
+COPY ./cleaner.py /usr/src/app/cleaner.py
 
 
 RUN mkdir ~/.ssh
@@ -65,4 +66,4 @@ USER puppeteer
 RUN npx puppeteer browsers install chrome
 
 # Set the default command to run your scripts
-CMD ["bash", "-c", "python3 run.py && python3 telegram_group_bot.py"]
+CMD ["bash", "-c", "python3 run.py && python3 telegram_group_bot.py &&  python3 cleaner.py"]

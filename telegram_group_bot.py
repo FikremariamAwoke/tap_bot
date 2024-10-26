@@ -124,7 +124,7 @@ def add_link_to_json(new_url, json_file='links.json') -> str:
 app = ApplicationBuilder().token("7215862533:AAEzOQFD0K-zi2gW7Puw5xazq65eBnFzJ5c").build()
 
 app.add_handler(CommandHandler("hello", hello))
-app.add_handler(CommandHandler("hello", active))
+app.add_handler(CommandHandler("active", active))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, extract_links))
 
 app.run_polling()

@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
+const { url } = require('inspector');
 
 
 // Function to read links from links.json
@@ -13,6 +14,30 @@ const readLinksFromJson = (filePath) => {
     console.error("Error reading links.json:", error);
     return [];
   }
+}
+
+const getNameFromLink = (link) => {
+  const url = new URL(link);
+
+  // Extract the 'tgWebAppData' parameter from the hash
+  const params = new URLSearchParams(url.hash.substring(1));
+  const tgWebAppData = params.get('tgWebAppData');
+
+  // Decode and parse the user data
+  const decodedData = decodeURIComponent(tgWebAppData);
+  const userMatch = decodedData.match(/user=([^&]*)/); // Find the user data in the string
+
+  if (userMatch) {
+      const userJson = decodeURIComponent(userMatch[1]); // Decode the JSON-like user data
+      const user = JSON.parse(userJson); // Parse the JSON to extract fields
+
+      // Get the first and last name
+      const firstName = user.first_name || '';
+      const lastName = user.last_name || '';
+
+      return (`${firstName} ${lastName}`)
+  }
+
 }
 
 (async () => {
@@ -47,7 +72,7 @@ const readLinksFromJson = (filePath) => {
     });
 
     count = count + 1;
-    console.log(`opening the page ${count}: ${link}...\n`);
+    console.log(`opening the page ${count}: ${getNameFromLink(link)}...\n`);
     try {
         // Navigate to the target page
         await page.goto(link, { waitUntil: 'networkidle2' });
@@ -57,13 +82,13 @@ const readLinksFromJson = (filePath) => {
 
     // Reload the page every 30 minutes (30 * 60 * 1000 milliseconds)
     setInterval(async () => {
-      console.log(`Reloading the page: ${link}...`);
+      console.log(`Reloading the page: ${getNameFromLink(link)}...`);
       try {
         await page.reload({ waitUntil: 'networkidle2' });
         console.log("Page reloaded successfully.\n");
     } catch (error) {
         console.error("Error reloading page:", error);
     }
-    }, 10 * 60 * 1000); // 30 minutes in milliseconds
+    }, 10 * 60 * 1000); // 10 minutes in milliseconds
   }
 })();

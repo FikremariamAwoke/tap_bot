@@ -33,7 +33,7 @@ async def active(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             name = get_name_from_link(link["url"])
             if name:
                 # Calculate time remaining
-                added_at = datetime.fromisoformat(link["addedAt"])  # Adjust this if your timestamp format differs
+                added_at = datetime.fromtimestamp(link["addedAt"])
                 expiration_time = added_at + timedelta(hours=24)
                 remaining_time = expiration_time - datetime.now()
 

@@ -1,7 +1,7 @@
 # Use Node.js as the base image
 FROM node:20-bullseye-slim
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Install dependencies
 # Install necessary packages for Chromium sandbox
@@ -46,7 +46,9 @@ COPY ./.git /usr/src/app/.git
 COPY ./requirements.txt /usr/src/app/requirements.txt
 COPY ./telegram_group_bot.py /usr/src/app/telegram_group_bot.py
 COPY ./cleaner.py /usr/src/app/cleaner.py
+COPY ./links.json /usr/src/app/links.json
 
+RUN chmod 664 /usr/src/app/links.json
 
 RUN mkdir ~/.ssh
 RUN ssh-keyscan github.com >> ~/.ssh/known_hosts
@@ -61,9 +63,12 @@ RUN npm install puppeteer
 RUN pip install -r requirements.txt
 
 RUN useradd -m puppeteer
+
+RUN chown puppeteer:puppeteer /usr/src/app/links.json
+
 USER puppeteer
 
 RUN npx puppeteer browsers install chrome
 
 # Set the default command to run your scripts
-CMD ["bash", "-c", "python3 run.py && python3 telegram_group_bot.py &&  python3 cleaner.py"]
+CMD ["bash", "-c", "python3 run.py & python3 telegram_group_bot.py & python3 cleaner.py"]

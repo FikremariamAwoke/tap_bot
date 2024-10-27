@@ -50,6 +50,18 @@ const getNameFromLink = (link) => {
 
   var count = 0
 
+  if (links.length === 0) {
+    console.log("No links found in links.json.");  if (links.length === 0) {
+      console.log("No links found in links.json.");
+      setInterval(async () => {
+        console.log("No links found in links.json.");
+      }, 10 * 60 * 1000); 
+    }
+    setInterval(async () => {
+      console.log("No links found in links.json.");
+    }, 10 * 60 * 1000); 
+  }
+
   for (const link of links) {
     // Launch a new browser instance for each link
     const browser = await puppeteer.launch({ headless: true }); // Set to false to show UI
